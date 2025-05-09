@@ -1,0 +1,7 @@
+FastAPI
+SQLAlchemy
+uvicorn
+pydantic
+python-dotenv
+psycopg2-binary
+pydantic_settings
