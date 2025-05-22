@@ -1,17 +1,36 @@
-def calculate_cart_total(cart_entries, price_service):
-    total = 0.0
-    for entry in cart_entries:
-        product_id = entry['product_id']
-        quantity = entry['quantity']
-        price = price_service.get_price(product_id)
-        total += price * quantity
-    return total
+from src.schemas.cart import CartEntry, Cart
+from sqlalchemy.orm import Session
+from src.schemas.price import PriceRequest, ProductPrice
+from src.services.pricing_service import get_prices
+from datetime import datetime
 
-def validate_cart_entries(cart_entries):
-    if not isinstance(cart_entries, list):
-        raise ValueError("Cart entries must be a list.")
-    for entry in cart_entries:
-        if 'product_id' not in entry or 'quantity' not in entry:
-            raise ValueError("Each cart entry must contain 'product_id' and 'quantity'.")
-        if not isinstance(entry['quantity'], int) or entry['quantity'] <= 0:
-            raise ValueError("Quantity must be a positive integer.")
+async def calculate_cart_total(db: Session, cart: Cart) -> Cart:
+    price_request = PriceRequest(
+        currency=cart.currency,
+        customer_id=cart.customer_id,
+        customer_group_id=cart.customer_group_id,
+        request_date=cart.request_date,
+        products=[ProductPrice(product_id=item.product_id) for item in cart.items]
+    )
+    
+    # Get all prices at once
+    prices_response = await get_prices(db, price_request)
+    
+    # Create price lookup dictionary (modified to work with list response)
+    price_map = {price.product_id: price.amount for price in prices_response.prices}
+    
+    total = 0.0
+    for item in cart.items:
+        if item.product_id not in price_map:
+            raise ValueError(f"No price found for product {item.product_id}")
+        total += price_map[item.product_id] * item.quantity
+    
+    cart.total_amount = total
+    return cart
+
+def validate_cart(cart: Cart):
+    if not cart.items:
+        raise ValueError("Cart cannot be empty")
+    for item in cart.items:
+        if item.quantity <= 0:
+            raise ValueError("Quantity must be a positive integer")

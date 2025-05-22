@@ -1,14 +1,15 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime
 
-class CartItem(BaseModel):
+class CartEntry(BaseModel):
     product_id: str
     quantity: int
 
 class Cart(BaseModel):
-    items: List[CartItem]
-
-class CartTotalResponse(BaseModel):
-    total_amount: float
+    items: List[CartEntry]
     currency: str
-    items: List[CartItem]
+    customer_id: Optional[str] = None
+    customer_group_id: Optional[str] = None
+    request_date: datetime
+    total_amount: Optional[float] = None

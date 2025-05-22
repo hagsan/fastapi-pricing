@@ -11,7 +11,7 @@ router = APIRouter()
 async def pricing(prices_request: PriceRequest, db: Session = Depends(get_db)):
     try:
         prices = await get_prices(db, prices_request)
-        return prices[0]
+        return prices
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

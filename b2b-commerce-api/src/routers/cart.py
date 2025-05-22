@@ -1,21 +1,14 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List
+from fastapi import APIRouter, HTTPException, Depends
+from src.schemas.cart import Cart
 from src.services.cart_service import calculate_cart_total
+from src.database.session import get_db
+from sqlalchemy.orm import Session
 
 router = APIRouter()
 
-class CartEntry(BaseModel):
-    product_id: int
-    quantity: int
-
-class Cart(BaseModel):
-    entries: List[CartEntry]
-
-@router.post("/cart/calculate")
-async def calculate_cart(cart: Cart):
+@router.post("/cart/calculate", response_model=Cart)
+async def calculate_cart(cart: Cart, db: Session = Depends(get_db)):
     try:
-        total_cost = calculate_cart_total(cart.entries)
-        return {"total_cost": total_cost}
+        return await calculate_cart_total(db, cart)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))

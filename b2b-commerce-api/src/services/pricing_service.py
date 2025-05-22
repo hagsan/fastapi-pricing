@@ -66,7 +66,7 @@ async def get_price(db: Session, request: PriceRequest):
 async def get_prices(db: Session, price_request: PriceRequest) -> List[PriceResponse]:
     prices = await get_price(db, price_request)
     
-    return [PriceResponse(prices=prices)]
+    return PriceResponse(prices=prices)
 
 
 def calculate_discounted_price(price: float, discount_percentage: float) -> float:
