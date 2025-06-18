@@ -1,80 +1,103 @@
 # b2b-commerce-api
 
-This project is a FastAPI application designed for B2B commerce, providing endpoints for price retrieval and pricing calculations.
+This project is a FastAPI application designed for B2B commerce, providing endpoints for price retrieval and cart calculations.
 
 ## Features
 
-- **Pricing Endpoint**: Accepts a list of products and returns their pricing information
-- **PostgreSQL Database**: Stores price records using SQLAlchemy
-- **Docker Support**: Containerized application and database
+- **Price Management**: GET and POST endpoints for price retrieval and creation
+- **Cart Calculations**: Shopping cart total calculation with customer-specific pricing
+- **SQLite/PostgreSQL Support**: Flexible database backend using SQLAlchemy
 - **Customer-specific Pricing**: Support for customer and customer group specific prices
 
-## Project Structure
+## Technologies Used
 
-```
-b2b-commerce-api
-├── src
-│   ├── main.py                # Entry point of the FastAPI application
-│   ├── config.py              # Configuration settings
-│   ├── database               # Contains database models and connection setup
-│   ├── routers                # Contains API route definitions
-│   ├── schemas                # Contains Pydantic schemas
-│   └── services               # Contains business logic for pricing
-├── Dockerfile                 # Docker configuration for the API
-├── docker-compose.yml         # Docker compose configuration
-├── init.sql                   # Database initialization script
-├── requirements.txt           # Project dependencies
-└── README.md                  # Project documentation
-```
-
-## Setup Instructions
-
-### Using Docker (Recommended)
-
-1. Clone the repository and navigate to the project directory
-2. Create a `.env` file with your database configuration:
-   ```
-   DATABASE_USERNAME=postgres
-   DATABASE_PASSWORD=postgres
-   DATABASE_HOST=db
-   DATABASE_PORT=5432
-   DATABASE_NAME=prices_db
-   ```
-3. Start the application:
-   ```bash
-   docker-compose up -d
-   ```
-
-### Manual Setup
-
-1. Install PostgreSQL and create a database
-2. Create a virtual environment and install dependencies:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   pip install -r requirements.txt
-   ```
-3. Update `.env` with your database configuration
-4. Run the application:
-   ```bash
-   uvicorn src.main:app --reload
-   ```
+- **FastAPI**: Modern, fast web framework for building APIs with Python
+- **SQLAlchemy**: SQL toolkit and ORM for database operations
+- **Pydantic**: Data validation using Python type annotations
+- **PostgreSQL/SQLite**: Database backends
+- **Docker**: Containerization and deployment
+- **uvicorn**: ASGI server for running the FastAPI application
 
 ## API Endpoints
 
-### Pricing Endpoint
-- **URL**: `/pricing`
-- **Method**: `POST`
-- **Request Body**:
+### Price Endpoints
+- **GET** `/prices`
   ```json
   {
-    "currency": "USD",
-    "customer_id": "optional-customer-id",
-    "customer_group_id": "optional-group-id",
+    "currency": "EUR",
+    "customer_id": "optional",
+    "customer_group_id": "optional",
     "request_date": "2024-01-01T00:00:00",
     "products": [
-      { "product_id": "product1" }
+      { "product_id": "PROD1" }
     ]
   }
   ```
-- **Response**: List of prices with customer-specific and generic pricing
+
+- **POST** `/prices`
+  ```json
+  {
+    "product_id": "PROD1",
+    "amount": 99.99,
+    "currency": "EUR",
+    "customer_id": "optional",
+    "customer_group_id": "optional",
+    "valid_from": "2024-01-01T00:00:00",
+    "valid_to": "2024-12-31T23:59:59"
+  }
+  ```
+
+### Cart Endpoint
+- **POST** `/cart/calculate`
+  ```json
+  {
+    "items": [
+      {
+        "product_id": "PROD1",
+        "quantity": 2
+      }
+    ],
+    "currency": "EUR",
+    "customer_id": "optional",
+    "customer_group_id": "optional",
+    "request_date": "2024-01-01T00:00:00"
+  }
+  ```
+
+## Setup Instructions
+
+### Database Configuration
+
+Create a `.env` file in the project root:
+```env
+DATABASE_URL=postgresql://postgres:postgres@db:5432/prices_db
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=prices_db
+```
+
+### Development Setup
+1. Create a virtual environment:
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+2. Install dependencies:
+   pip install -r requirements.txt
+
+3. Run the application:
+   uvicorn src.main:app --reload
+
+## Development with Docker
+
+1. Start the development environment:
+   docker-compose up -d
+
+2. View logs:
+   docker-compose logs -f api
+
+3. Run tests in container:
+   docker-compose exec api pytest tests/ -v
+
+4. Access the API:
+   - API: http://localhost:8080
+   - Swagger UI: http://localhost:8080/docs
