@@ -88,15 +88,14 @@ DATABASE_NAME=prices_db
    uvicorn src.main:app --reload
 
 ## Development with Docker
+1. Build the docker containers:
+   docker-compose build
 
-1. Start the development environment:
+2. Start the development environment:
    docker-compose up -d
 
-2. View logs:
+3. View logs:
    docker-compose logs -f api
-
-3. Run tests in container:
-   docker-compose exec api pytest tests/ -v
 
 4. Access the API:
    - API: http://localhost:8080
