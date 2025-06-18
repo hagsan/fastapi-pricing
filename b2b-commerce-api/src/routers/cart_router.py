@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from src.schemas.cart import Cart
+from src.schemas.cart_schema import Cart
 from src.services.cart_service import calculate_cart_total
 from src.database.session import get_db
 from sqlalchemy.orm import Session

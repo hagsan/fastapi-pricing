@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
-from src.schemas.price import PriceRequest, PriceResponse, PriceCreate
+from src.schemas.price_schema import PriceRequest, PriceResponse, PriceCreate
 from src.services.pricing_service import get_prices, create_price
 from src.database.session import get_db
 from sqlalchemy.orm import Session

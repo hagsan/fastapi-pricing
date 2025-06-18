@@ -1,8 +1,7 @@
-from src.schemas.cart import CartEntry, Cart
+from src.schemas.cart_schema import CartEntry, Cart
 from sqlalchemy.orm import Session
-from src.schemas.price import PriceRequest, ProductPrice
+from src.schemas.price_schema import PriceRequest, ProductPrice
 from src.services.pricing_service import get_prices
-from datetime import datetime
 
 async def calculate_cart_total(db: Session, cart: Cart) -> Cart:
     price_request = PriceRequest(

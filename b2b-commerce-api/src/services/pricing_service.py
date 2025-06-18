@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy import or_
 from src.database.models import Price
-from src.schemas.price import PriceRequest, PriceResponse, PriceCreate, PriceOutput
+from src.schemas.price_schema import PriceRequest, PriceResponse, PriceCreate, PriceOutput
 
 async def create_price(db: Session, price_create: PriceCreate) -> Dict:
     try:
@@ -67,8 +67,3 @@ async def get_prices(db: Session, price_request: PriceRequest) -> List[PriceResp
     prices = await get_price(db, price_request)
     
     return PriceResponse(prices=prices)
-
-
-def calculate_discounted_price(price: float, discount_percentage: float) -> float:
-    # Logic to calculate the discounted price
-    return price * (1 - discount_percentage / 100)
