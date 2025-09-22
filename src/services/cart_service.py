@@ -22,14 +22,9 @@ async def calculate_cart_total(db: Session, cart: Cart) -> Cart:
     for item in cart.items:
         if item.product_id not in price_map:
             raise ValueError(f"No price found for product {item.product_id}")
-        total += price_map[item.product_id] * item.quantity
+        item_total = price_map[item.product_id] * item.quantity
+        item.total = item_total
+        total += item_total
     
     cart.total_amount = total
     return cart
-
-def validate_cart(cart: Cart):
-    if not cart.items:
-        raise ValueError("Cart cannot be empty")
-    for item in cart.items:
-        if item.quantity <= 0:
-            raise ValueError("Quantity must be a positive integer")

@@ -5,3 +5,5 @@ pydantic
 python-dotenv
 psycopg2-binary
 pydantic_settings
+pytest
+pytest-asyncio
