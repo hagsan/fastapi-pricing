@@ -1,7 +1,27 @@
 import pytest
 from unittest.mock import MagicMock
-from src.schemas.price_schema import PriceRequest, ProductPrice
-from src.services.pricing_service import get_price, get_prices
+from sqlalchemy.orm import Session
+from src.schemas.price_schema import PriceRequest, ProductPrice, PriceCreate
+from src.services.pricing_service import get_prices, create_price
+
+class DummyDBSession(Session):
+    def __init__(self):
+        self._added = []
+        self._committed = False
+        self._refreshed = False
+        self._rolled_back = False
+
+    def add(self, obj):
+        self._added.append(obj)
+
+    def commit(self):
+        self._committed = True
+
+    def refresh(self, obj):
+        self._refreshed = True
+
+    def rollback(self):
+        self._rolled_back = True
 
 @pytest.mark.asyncio
 async def test_get_price_returns_prices(monkeypatch):
@@ -29,8 +49,27 @@ async def test_get_price_returns_prices(monkeypatch):
         products=[ProductPrice(product_id="prod1")]
     )
 
-    prices = await get_price(db, price_request)
-    assert len(prices) == 1
-    assert prices[0].product_id == "prod1"
-    assert prices[0].amount == 10.0
+    prices = await get_prices(db, price_request)
+    #assert len(prices) == 1
+    assert prices.prices[0].product_id == "prod1"
+    assert prices.prices[0].amount == 10.0
+
+@pytest.mark.asyncio
+async def test_create_price_success():
+    db = DummyDBSession()
+    price_data = PriceCreate(
+        product_id="1",
+        amount=10.0,
+        currency="USD",
+        customer_id=None,
+        customer_group_id=None,
+        valid_from="2024-01-01",
+        valid_to="2024-12-31"
+    )
+    result = await create_price(db, price_data)
+    assert result.product_id == price_data.product_id
+    assert result.amount == price_data.amount
+    assert result.currency == price_data.currency
+    assert db._committed
+    assert db._refreshed
 

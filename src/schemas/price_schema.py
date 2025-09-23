@@ -12,10 +12,6 @@ class PriceRequest(BaseModel):
     request_date: datetime
     products: List[ProductPrice]
 
-class PriceInput(BaseModel):
-    product_id: str
-    quantity: int
-
 class PriceOutput(BaseModel):
     id: int
     product_id: str
