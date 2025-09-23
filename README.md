@@ -1,6 +1,6 @@
-# b2b-commerce-api
+# FastApi Pricing
 
-This project is a FastAPI application designed for B2B commerce, providing endpoints for price retrieval and cart calculations.
+This project is a FastAPI application designed for pricing in (B2B) commerce, providing endpoints for price creation and retrieval and cart calculations.
 
 ## Features
 
