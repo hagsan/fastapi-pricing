@@ -1,4 +1,4 @@
-# FastApi Pricing
+# FastAPI Pricing
 
 This project is a FastAPI application designed for pricing in (B2B) commerce, providing endpoints for price creation and retrieval and cart calculations.
 
