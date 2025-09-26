@@ -45,19 +45,38 @@ async def get_prices(db: Session, price_request: PriceRequest) -> PriceResponse:
 
     if not result:
         return None
-    
-    price_outputs = []
-    
+
+    # Group by product_id
+    prices_by_product = {}
     for price_record in result.scalars():
+        pid = price_record.product_id
+        prices_by_product.setdefault(pid, []).append(price_record)
+
+    price_outputs = []
+    for pid, records in prices_by_product.items():
+        # Prioritize by customer_id, then customer_group_id, then fallback
+        selected = None
+        for r in records:
+            if price_request.customer_id and r.customer_id == price_request.customer_id:
+                selected = r
+                break
+        if not selected and price_request.customer_group_id:
+            for r in records:
+                if r.customer_group_id == price_request.customer_group_id:
+                    selected = r
+                    break
+        if not selected:
+            selected = r
+
         price_output = PriceOutput(
-            id=price_record.id,
-            product_id=price_record.product_id,
-            amount=price_record.amount,
-            currency=price_record.currency,
-            customer_id=price_record.customer_id,
-            customer_group_id=price_record.customer_group_id,
-            valid_from=price_record.valid_from,
-            valid_to=price_record.valid_to
+            id=selected.id,
+            product_id=selected.product_id,
+            amount=selected.amount,
+            currency=selected.currency,
+            customer_id=selected.customer_id,
+            customer_group_id=selected.customer_group_id,
+            valid_from=selected.valid_from,
+            valid_to=selected.valid_to
         )
         price_outputs.append(price_output)
     

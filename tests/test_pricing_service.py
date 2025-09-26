@@ -23,36 +23,12 @@ class DummyDBSession(Session):
     def rollback(self):
         self._rolled_back = True
 
-@pytest.mark.asyncio
-async def test_get_price_returns_prices(monkeypatch):
-    db = MagicMock()
-    # Mock db.execute to return a result with scalars
-    mock_price_record = MagicMock(
-        id=1,
-        product_id="prod1",
-        amount=10.0,
-        currency="USD",
-        customer_id="cust1",
-        customer_group_id=None,
-        valid_from="2024-01-01T00:00:00",
-        valid_to="2024-12-31T00:00:00"
-    )
-    mock_result = MagicMock()
-    mock_result.scalars.return_value = [mock_price_record]
-    db.execute.return_value = mock_result
-
-    price_request = PriceRequest(
-        currency="USD",
-        customer_id="cust1",
-        customer_group_id=None,
-        request_date="2024-06-01T00:00:00",
-        products=[ProductPrice(product_id="prod1")]
-    )
-
-    prices = await get_prices(db, price_request)
-    #assert len(prices) == 1
-    assert prices.prices[0].product_id == "prod1"
-    assert prices.prices[0].amount == 10.0
+def get_mock_prices():
+    return [
+        MagicMock(product_id="prod1", amount=20.0, currency="USD", customer_id="cust1", customer_group_id=None, id=1, valid_from="2024-01-01T00:00:00", valid_to="2024-12-31T00:00:00"),
+        MagicMock(product_id="prod1", amount=15.0, currency="USD", customer_id=None, customer_group_id="group1", id=2, valid_from="2024-01-01T00:00:00", valid_to="2024-12-31T00:00:00"),
+        MagicMock(product_id="prod1", amount=10.0, currency="USD", customer_id=None, customer_group_id=None, id=3, valid_from="2024-01-01T00:00:00", valid_to="2024-12-31T00:00:00")
+    ]
 
 @pytest.mark.asyncio
 async def test_create_price_success():
@@ -73,3 +49,53 @@ async def test_create_price_success():
     assert db._committed
     assert db._refreshed
 
+@pytest.mark.asyncio
+async def test_get_price_prioritizes_customer_id(monkeypatch):
+    db = MagicMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value = get_mock_prices()
+    db.execute.return_value = mock_result
+
+    price_request = PriceRequest(
+        currency="USD",
+        customer_id="cust1",
+        customer_group_id="group1",
+        request_date="2024-06-01T00:00:00",
+        products=[ProductPrice(product_id="prod1")]
+    )
+    prices = await get_prices(db, price_request)
+    assert prices.prices[0].amount == 20.0  # Should select price_customer
+
+@pytest.mark.asyncio
+async def test_get_price_prioritizes_customer_group_id(monkeypatch):
+    db = MagicMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value = get_mock_prices()
+    db.execute.return_value = mock_result
+
+    price_request = PriceRequest(
+        currency="USD",
+        customer_id=None,
+        customer_group_id="group1",
+        request_date="2024-06-01T00:00:00",
+        products=[ProductPrice(product_id="prod1")]
+    )
+    prices = await get_prices(db, price_request)
+    assert prices.prices[0].amount == 15.0  # Should select price_group
+
+@pytest.mark.asyncio
+async def test_get_price_fallback_to_default(monkeypatch):
+    db = MagicMock()
+    mock_result = MagicMock()
+    mock_result.scalars.return_value = get_mock_prices()
+    db.execute.return_value = mock_result
+
+    price_request = PriceRequest(
+        currency="USD",
+        customer_id=None,
+        customer_group_id=None,
+        request_date="2024-06-01T00:00:00",
+        products=[ProductPrice(product_id="prod1")]
+    )
+    prices = await get_prices(db, price_request)
+    assert prices.prices[0].amount == 10.0  # Should select price_default
