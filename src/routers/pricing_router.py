@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from src.schemas.price_schema import PriceRequest, PriceResponse, PriceCreate
-from src.services.pricing_service import get_prices, create_price
+from src.services.pricing_service import get_prices, create_price, delete_price
 from src.database.session import get_db
 from sqlalchemy.orm import Session
 
@@ -21,5 +21,15 @@ async def add_price(price_request: PriceCreate, db: Session = Depends(get_db)):
     try:
         price = await create_price(db, price_request)
         return price
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/prices/{price_id}", response_model=bool)
+async def remove_price(price_id: int, db: Session = Depends(get_db)):
+    try:
+        result = await delete_price(db, price_id)
+        if not result:
+            raise HTTPException(status_code=404, detail="Price not found")
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
